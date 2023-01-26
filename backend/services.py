@@ -1,5 +1,6 @@
 """Backend Service Functions"""
 
+import datetime as _dt
 import os
 from dotenv import load_dotenv
 
@@ -109,8 +110,112 @@ async def get_current_user(
         payload = _jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
         user = db.query(_models.User).get(payload["id"])
     except:
-        raise _fastapi.HTTPException(
+        raise _fastapi.HTTPException(  # pylint: disable=W0707
             status_code=401, detail="Invalid Email or Password"
         )
 
     return _schemas.User.from_orm(user)
+
+
+async def create_lead(user: _schemas.User, db: _orm.Session, lead: _schemas.LeadCreate):
+    """
+    Create a new lead and commit to database
+
+        param user: User to create lead for
+        param db: Database connection
+        param lead: Lead to create
+    """
+    lead = _models.Lead(**lead.dict(), owner_id=user.id)
+    db.add(lead)
+    db.commit()
+    db.refresh(lead)
+    return _schemas.Lead.from_orm(lead)
+
+
+async def get_leads(user: _schemas.User, db: _orm.Session):
+    """
+    Get Leads
+
+        :param user: User to filter leads by
+        :param db: Database session
+        :return: A list of leads from database
+    """
+    leads = db.query(_models.Lead).filter_by(owner_id=user.id)
+    return list(map(_schemas.Lead.from_orm, leads))
+
+
+async def _lead_selector(lead_id: int, user: _schemas.User, db: _orm):
+    """
+    A helper function to select a specific lead from the database
+
+        :param lead_id: (int): Lead ID to filter by
+        :param user: User to filter leads by
+        :param db: Database session
+
+        return: A lead
+    """
+    lead = db.query(_models.Lead).filter_by(id=lead_id, owner_id=user.id).first()
+    if not lead:
+        raise _fastapi.HTTPException(
+            status_code=404, detail="A lead matching these details does not exist"
+        )
+    return lead
+
+
+async def get_lead(lead_id: int, user: _schemas.User, db: _orm.Session):
+    """
+    Get Lead, this function calls the _lead_selector()
+
+        :param lead_id: (int): Lead ID
+        :param user: User
+        :param db: Database session
+
+        return: A ORM mapped lead
+    """
+
+    lead = await _lead_selector(lead_id=lead_id, user=user, db=db)
+    return _schemas.Lead.from_orm(lead)
+
+
+async def delete_lead(lead_id: int, user: _schemas.User, db: _orm.Session):
+    """
+    Delete Lead from the database, this function calls the _lead_selector()
+
+        :param lead_id: (int): Lead ID
+        :param user: User
+        :param db: Database session
+
+        return: None
+    """
+    lead = await _lead_selector(lead_id, user, db)
+
+    db.delete(lead)
+    db.commit()
+
+
+async def update_lead(
+    lead_id: int, lead: _schemas.LeadCreate, user: _schemas.User, db: _orm.Session
+):
+    """
+    Update Lead, this function calls the _lead_selector()
+
+        :param lead_id: (int): Lead ID
+        :param lead: Lead to update, date update done server-side
+        :param user: User
+        :param db: Database session
+
+        return: A ORM mapped lead
+    """
+    lead_db = await _lead_selector(lead_id, user, db)
+
+    lead_db.first_name = lead.first_name
+    lead_db.last_name = lead.last_name
+    lead_db.email = lead.email
+    lead_db.company = lead.company
+    lead_db.note = lead.note
+    lead_db.date_last_updated = _dt.datetime.utcnow()
+
+    db.commit()
+    db.refresh(lead_db)
+
+    return _schemas.Lead.from_orm(lead_db)
