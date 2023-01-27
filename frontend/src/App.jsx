@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import Header from './components/Header';
 import Login from './components/Login';
 import Register from './components/Register';
+import Table from './components/Table';
 import { UserContext } from './context/UserContext';
 
 const App = () => {
@@ -39,7 +40,7 @@ const App = () => {
 							<Register /> <Login />
 						</div>
 					) : (
-						<p>Table</p>
+						<Table></Table>
 					)}
 				</div>
 				<div className="column"></div>
