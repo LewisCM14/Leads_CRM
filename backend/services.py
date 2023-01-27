@@ -2,16 +2,16 @@
 
 import datetime as _dt
 import os
-from dotenv import load_dotenv
 
+import database as _database  # pylint: disable=E0401
 import fastapi as _fastapi
 import fastapi.security as _security
-import database as _database  # pylint: disable=E0401
-import sqlalchemy.orm as _orm
-import passlib.hash as _hash
 import jwt as _jwt
 import models as _models  # pylint: disable=E0401
+import passlib.hash as _hash
 import schemas as _schemas  # pylint: disable=E0401
+import sqlalchemy.orm as _orm
+from dotenv import load_dotenv
 
 load_dotenv()
 oauth2schema = _security.OAuth2PasswordBearer(tokenUrl="/api/token")

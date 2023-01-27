@@ -1,10 +1,11 @@
 """Database Models"""
 
 import datetime as _dt
+
+import database as _database  # pylint: disable=E0401
+import passlib.hash as _hash
 import sqlalchemy as _sql
 import sqlalchemy.orm as _orm
-import passlib.hash as _hash
-import database as _database  # pylint: disable=E0401
 
 
 class User(_database.Base):
