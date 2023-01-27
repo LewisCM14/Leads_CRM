@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 
 import Header from './components/Header';
+import Login from './components/Login';
 import Register from './components/Register';
 import { UserContext } from './context/UserContext';
 
@@ -35,7 +36,7 @@ const App = () => {
 				<div className="column m-5 is-two-thirds">
 					{!token ? (
 						<div className="columns">
-							<Register /> <p>Login</p>
+							<Register /> <Login />
 						</div>
 					) : (
 						<p>Table</p>
