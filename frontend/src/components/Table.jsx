@@ -13,6 +13,26 @@ const Table = () => {
 	const [activeModal, setActiveModal] = useState(false);
 	const [id, setId] = useState(null);
 
+	const handleUpdate = async (id) => {
+		setId(id);
+		setActiveModal(true);
+	};
+
+	const handleDelete = async (id) => {
+		const requestOptions = {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: 'Bearer ' + token,
+			},
+		};
+		const response = await fetch(`/api/leads/${id}`, requestOptions);
+		if (!response.ok) {
+			setErrorMessage('Failed to delete lead');
+		}
+		getLeads();
+	};
+
 	const getLeads = async () => {
 		const requestOptions = {
 			method: 'GET',
@@ -39,7 +59,7 @@ const Table = () => {
 	const handleModal = () => {
 		setActiveModal(!activeModal);
 		getLeads();
-		setActiveModal(null);
+		setId(null);
 	};
 
 	return (
@@ -85,10 +105,16 @@ const Table = () => {
 									)}
 								</td>
 								<td>
-									<button className="button mr-2 is-info is-light">
+									<button
+										className="button mr-2 is-info is-light"
+										onClick={() => handleUpdate(lead.id)}
+									>
 										Update
 									</button>
-									<button className="button mr-2 is-danger is-light">
+									<button
+										className="button mr-2 is-danger is-light"
+										onClick={() => handleDelete(lead.id)}
+									>
 										Delete
 									</button>
 								</td>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const LeadModal = ({ active, handleModal, token, id, setErrorMessage }) => {
 	const [firstName, setFirstName] = useState('');
@@ -14,6 +14,34 @@ const LeadModal = ({ active, handleModal, token, id, setErrorMessage }) => {
 		setEmail('');
 		setNote('');
 	};
+
+	useEffect(() => {
+		const getLead = async () => {
+			const requestOptions = {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: 'Bearer ' + token,
+				},
+			};
+			const response = await fetch(`/api/leads/${id}`, requestOptions);
+
+			if (!response.ok) {
+				setErrorMessage('Could not get the lead');
+			} else {
+				const data = await response.json();
+				setFirstName(data.first_name);
+				setLastName(data.last_name);
+				setCompany(data.company);
+				setEmail(data.email);
+				setNote(data.note);
+			}
+		};
+
+		if (id) {
+			getLead();
+		}
+	}, [id, token, setErrorMessage]);
 
 	const handleCreateLead = async (e) => {
 		e.preventDefault();
@@ -40,6 +68,30 @@ const LeadModal = ({ active, handleModal, token, id, setErrorMessage }) => {
 		}
 	};
 
+	const handleUpdateLead = async (e) => {
+		e.preventDefault();
+		const requestOptions = {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: 'Bearer ' + token,
+			},
+			body: JSON.stringify({
+				first_name: firstName,
+				last_name: lastName,
+				company: company,
+				email: email,
+				note: note,
+			}),
+		};
+		const response = await fetch(`/api/leads/${id}`, requestOptions);
+		if (!response.ok) {
+			setErrorMessage('Something went wrong updating lead');
+		} else {
+			cleanFormData();
+			handleModal();
+		}
+	};
 	return (
 		<div className={`modal ${active && 'is-active'}`}>
 			<div className="modal-background" onClick={handleModal}></div>
@@ -121,7 +173,12 @@ const LeadModal = ({ active, handleModal, token, id, setErrorMessage }) => {
 				</section>
 				<footer className="modal-card-foot has-background-primary-light">
 					{id ? (
-						<button className="button is-info">Update</button>
+						<button
+							className="button is-info"
+							onClick={handleUpdateLead}
+						>
+							Update
+						</button>
 					) : (
 						<button
 							className="button is-primary"
